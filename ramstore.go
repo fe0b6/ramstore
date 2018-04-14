@@ -1,7 +1,6 @@
 package ramstore
 
 import (
-	"errors"
 	"log"
 	"sync"
 	"time"
@@ -53,18 +52,18 @@ func waitExit(exitChan chan bool) {
 }
 
 // Set - Добавление хэша в хранилище
-func Set(key string, obj Obj) (err error) {
+func Set(key string, obj Obj) (err string) {
 	if exited {
-		return errors.New("store down")
+		return "store down"
 	}
 
 	if key == "" {
-		return errors.New("specify key")
+		return "specify key"
 	}
 
 	if obj.Deleted {
 		if time.Now().After(time.Unix(0, obj.Time).Add(deletedTimeout * time.Hour)) {
-			return errors.New("delete timeout")
+			return "delete timeout"
 		}
 	}
 
@@ -79,7 +78,7 @@ func Set(key string, obj Obj) (err error) {
 		if v.Time >= obj.Time {
 			data[num].Unlock()
 			wg.Done()
-			return errors.New("wrong time")
+			return "wrong time"
 		}
 	}
 
@@ -90,7 +89,7 @@ func Set(key string, obj Obj) (err error) {
 }
 
 // Get - Получение хэша из хранилища
-func Get(key string) (Obj, error) {
+func Get(key string) (Obj, string) {
 	num := getArrNum(key)
 
 	data[num].RLock()
@@ -99,10 +98,10 @@ func Get(key string) (Obj, error) {
 	data[num].RUnlock()
 
 	if !ok || obj.Deleted {
-		return obj, errors.New("key not found")
+		return obj, "key not found"
 	}
 
-	return obj, nil
+	return obj, ""
 }
 
 // Foreach - Перебираем все эелементы
