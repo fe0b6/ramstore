@@ -31,6 +31,8 @@ func saveData() {
 				if tn.After(time.Unix(0, v.Time).Add(deletedTimeout * time.Hour)) {
 					continue
 				}
+			} else if v.Expire > 0 && v.Expire <= int(tn.Unix()) {
+				continue
 			}
 
 			gh.Encode(saveObj{Key: k, Obj: v})

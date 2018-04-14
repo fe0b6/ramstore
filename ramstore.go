@@ -65,6 +65,8 @@ func Set(key string, obj Obj) (err string) {
 		if time.Now().After(time.Unix(0, obj.Time).Add(deletedTimeout * time.Hour)) {
 			return "delete timeout"
 		}
+	} else if obj.Expire > 0 && obj.Expire < int(time.Now().Unix()) {
+		return "expire obj"
 	}
 
 	wg.Add(1)
@@ -97,7 +99,7 @@ func Get(key string) (Obj, string) {
 	obj, ok := data[num].Data[key]
 	data[num].RUnlock()
 
-	if !ok || obj.Deleted {
+	if !ok || obj.Deleted || (obj.Expire > 0 && obj.Expire < int(time.Now().Unix())) {
 		return obj, "key not found"
 	}
 

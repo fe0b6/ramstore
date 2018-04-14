@@ -14,6 +14,7 @@ type Obj struct {
 	Time    int64
 	Data    []byte
 	Deleted bool
+	Expire  int
 }
 
 type saveObj struct {
