@@ -31,6 +31,8 @@ func InitStore() (exitChan chan bool) {
 
 	readData()
 
+	go cleanDaemon()
+
 	return
 }
 
@@ -108,7 +110,6 @@ func Get(key string) (Obj, string) {
 
 // Foreach - Перебираем все эелементы
 func Foreach(f func(string, Obj)) {
-
 	for i := range data {
 		data[i].RLock()
 
@@ -130,4 +131,33 @@ func getArrNum(key string) int {
 	}
 
 	return sum % mapCount
+}
+
+// Удаляем истекщие
+func cleanDaemon() {
+	for {
+		time.Sleep(86400 * time.Second)
+		cleanStore()
+	}
+}
+
+func cleanStore() {
+	tn := time.Now()
+
+	for i := range data {
+		data[i].Lock()
+
+		for k, v := range data[i].Data {
+			if v.Deleted {
+				if tn.After(time.Unix(0, v.Time).Add(deletedTimeout * time.Hour)) {
+					delete(data[i].Data, k)
+				}
+			} else if v.Expire > 0 && v.Expire <= int(tn.Unix()) {
+				delete(data[i].Data, k)
+			}
+
+		}
+
+		data[i].Unlock()
+	}
 }
