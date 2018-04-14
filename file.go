@@ -21,12 +21,14 @@ func saveData() {
 
 	gh := gob.NewEncoder(fh)
 
+	tn := time.Now()
+
 	for i := range data {
 		data[i].Lock()
 
 		for k, v := range data[i].Data {
 			if v.Deleted {
-				if time.Now().After(time.Unix(0, v.Time).Add(deletedTimeout * time.Hour)) {
+				if tn.After(time.Unix(0, v.Time).Add(deletedTimeout * time.Hour)) {
 					continue
 				}
 			}
