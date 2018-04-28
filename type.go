@@ -2,6 +2,7 @@ package ramstore
 
 import (
 	"sync"
+	"time"
 )
 
 type stor struct {
@@ -15,6 +16,14 @@ type Obj struct {
 	Data    []byte
 	Deleted bool
 	Expire  int
+}
+
+func (o *Obj) checkOK() bool {
+	if o.Deleted || (o.Expire > 0 && o.Expire < int(time.Now().Unix())) {
+		return false
+	}
+
+	return true
 }
 
 type saveObj struct {

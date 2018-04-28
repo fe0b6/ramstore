@@ -1,6 +1,7 @@
 package ramstore
 
 import (
+	"encoding/binary"
 	"log"
 	"sync"
 	"time"
@@ -92,6 +93,37 @@ func Set(key string, obj Obj) (err string) {
 	return
 }
 
+// Incr - Увеличение значения
+func Incr(key string, obj Obj) Obj {
+	num := getArrNum(key)
+
+	i, _ := binary.Varint(obj.Data)
+	if i == 0 {
+		return obj
+	}
+
+	wg.Add(1)
+	data[num].Lock()
+
+	obj, ok := data[num].Data[key]
+	var n int64
+	if ok && obj.checkOK() {
+		n, _ = binary.Varint(obj.Data)
+	}
+	n += i
+
+	buf := make([]byte, binary.MaxVarintLen64)
+	c := binary.PutVarint(buf, n)
+	obj.Data = buf[:c]
+
+	data[num].Data[key] = obj
+
+	data[num].Unlock()
+	wg.Done()
+
+	return obj
+}
+
 // Get - Получение хэша из хранилища
 func Get(key string) (Obj, string) {
 	num := getArrNum(key)
@@ -101,7 +133,7 @@ func Get(key string) (Obj, string) {
 	obj, ok := data[num].Data[key]
 	data[num].RUnlock()
 
-	if !ok || obj.Deleted || (obj.Expire > 0 && obj.Expire < int(time.Now().Unix())) {
+	if !ok || !obj.checkOK() {
 		return obj, "key not found"
 	}
 
