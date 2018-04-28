@@ -126,7 +126,7 @@ func Incr(key string, obj Obj) Obj {
 
 // Expire - Ставим время истечения
 func Expire(key string, obj Obj) string {
-	ex := int(time.Now().Unix()) + obj.Expire
+	ex := obj.Expire
 
 	num := getArrNum(key)
 
