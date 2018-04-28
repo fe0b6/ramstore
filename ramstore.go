@@ -124,6 +124,36 @@ func Incr(key string, obj Obj) Obj {
 	return obj
 }
 
+// Expire - Ставим время истечения
+func Expire(key string, obj Obj) string {
+	ex := int(time.Now().Unix()) + obj.Expire
+
+	num := getArrNum(key)
+
+	wg.Add(1)
+	data[num].Lock()
+
+	obj, ok := data[num].Data[key]
+	if !ok {
+		data[num].Unlock()
+		wg.Done()
+		return "key not found"
+	}
+
+	if obj.Expire == ex {
+		data[num].Unlock()
+		wg.Done()
+		return ""
+	}
+
+	obj.Expire = ex
+	data[num].Data[key] = obj
+
+	data[num].Unlock()
+	wg.Done()
+	return ""
+}
+
 // Get - Получение хэша из хранилища
 func Get(key string) (Obj, string) {
 	num := getArrNum(key)
