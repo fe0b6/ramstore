@@ -9,7 +9,7 @@ import (
 
 const (
 	mapCount       = 29
-	deletedTimeout = 7 * 24
+	deletedTimeout = 1
 )
 
 var (
