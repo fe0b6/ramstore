@@ -198,7 +198,7 @@ func getArrNum(key string) int {
 // Удаляем истекщие
 func cleanDaemon() {
 	for {
-		time.Sleep(86400 * time.Second)
+		time.Sleep(300 * time.Second)
 		cleanStore()
 	}
 }
